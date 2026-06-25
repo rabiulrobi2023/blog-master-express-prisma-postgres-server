@@ -3,7 +3,7 @@ import path from "path";
 
 dotenv.config({path: path.join((process.cwd(),".env"))});
 
-const requiredEnvVars = ["PORT", "DATABASE_URL"] as const;
+const requiredEnvVars = ["PORT", "DATABASE_URL", "FRONTEND_URL"] as const;
 
 const loadEnvConfig = () => {
   for (const envVar of requiredEnvVars) {

@@ -7,6 +7,8 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "migrate": "npx prisma migrate dev",
+    "generate": "npx prisma generate",
     "test-ts": "npx ts-node test.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
