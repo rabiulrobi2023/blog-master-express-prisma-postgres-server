@@ -1,9 +1,18 @@
 import dotenv from "dotenv";
 import path from "path";
 
-dotenv.config({path: path.join((process.cwd(),".env"))});
+dotenv.config({ path: path.join((process.cwd(), ".env")) });
 
-const requiredEnvVars = ["PORT", "DATABASE_URL", "FRONTEND_URL","BCRYPT_SALT_ROUND"] as const;
+const requiredEnvVars = [
+  "PORT",
+  "DATABASE_URL",
+  "FRONTEND_URL",
+  "BCRYPT_SALT_ROUND",
+  "JWT_ACCESS_TOKEN_SECRET",
+  "JWT_ACCESS_TOKEN_EXPIRE_IN",
+  "JWT_REFRESH_TOKEN_SECRET",
+  "JWT_REFRESH_TOKEN_EXPIRE_IN",
+] as const;
 
 const loadEnvConfig = () => {
   for (const envVar of requiredEnvVars) {
