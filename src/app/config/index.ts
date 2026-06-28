@@ -4,6 +4,7 @@ import path from "path";
 dotenv.config({ path: path.join((process.cwd(), ".env")) });
 
 const requiredEnvVars = [
+  "NODE_ENV",
   "PORT",
   "DATABASE_URL",
   "FRONTEND_URL",
@@ -25,5 +26,5 @@ const loadEnvConfig = () => {
   ) as Record<(typeof requiredEnvVars)[number], string>;
 };
 
-const env = loadEnvConfig();
-export default env;
+const config = loadEnvConfig();
+export default config;

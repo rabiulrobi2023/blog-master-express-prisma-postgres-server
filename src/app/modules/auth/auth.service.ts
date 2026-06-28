@@ -1,11 +1,10 @@
 import bcrypt from "bcryptjs";
-import { prisma } from "../../../lib/prisma";
+import { prisma } from "../../lib/prisma";
 import { ILoginUser } from "./auth.interface";
-import {
-  jwtAccessTokenGenerator,
-  jwtRefreshTokenGenerator,
-} from "../../../utils/jwt/jwtTokenGenerator";
-import { IJwtTokenPayload } from "../../../interface";
+import { jwtUtils } from "../../utils/jwt";
+import { IJwtTokenPayload } from "../../interface";
+import AppError from "../../utils/AppError";
+import { StatusCodes } from "http-status-codes";
 
 const loginUserIntoDB = async (payload: ILoginUser) => {
   const { email, password } = payload;
@@ -13,7 +12,7 @@ const loginUserIntoDB = async (payload: ILoginUser) => {
   const isPasswordMatched = await bcrypt.compare(password, user.password);
 
   if (!isPasswordMatched) {
-    throw new Error("Invalid password");
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid password");
   }
 
   if (user.activeStatus === "BLOCKED") {
@@ -27,8 +26,8 @@ const loginUserIntoDB = async (payload: ILoginUser) => {
     role: user.role,
   };
 
-  const accessToken = jwtAccessTokenGenerator(jwtTokenPayload);
-  const refreshToken = jwtRefreshTokenGenerator(jwtTokenPayload);
+  const accessToken = jwtUtils.jwtAccessTokenGenerator(jwtTokenPayload);
+  const refreshToken = jwtUtils.jwtRefreshTokenGenerator(jwtTokenPayload);
 
   return {
     accessToken,

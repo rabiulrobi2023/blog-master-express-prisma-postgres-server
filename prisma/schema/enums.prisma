@@ -4,7 +4,12 @@ enum ActiveStatus {
 }
 
 enum Role {
-  USER
+  USER 
   ADMIN
   AUTHOR
+}
+
+enum NodeEnv {
+  DEVELOPMENT
+  PRODUCTION
 }

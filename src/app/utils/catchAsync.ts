@@ -6,11 +6,7 @@ const catchAsync = (fn: RequestHandler) => {
     try {
       await fn(req, res, next);
     } catch (error) {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        message: (error as Error).message || "Fail to create user",
-        error: error as Error,
-      });
+      next(error);
     }
   };
 };

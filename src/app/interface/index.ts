@@ -1,5 +1,5 @@
 import { JwtPayload } from "jsonwebtoken";
-import { Role } from "../../generated/prisma/enums";
+import { Role } from "../../../generated/prisma/enums";
 
 export interface IJwtTokenPayload extends JwtPayload {
   id: string;

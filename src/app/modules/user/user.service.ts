@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { RegisterUserPayload } from "./user.interface";
-import env from "../../../config";
-import { prisma } from "../../../lib/prisma";
+import { prisma } from "../../lib/prisma";
+import config from "../../config";
 
 const registerUserIntoDB = async (payload: RegisterUserPayload) => {
   const { name, email, password, role, bio, profilePhoto } = payload;
@@ -9,7 +9,7 @@ const registerUserIntoDB = async (payload: RegisterUserPayload) => {
 
   const hashedPassword = await bcrypt.hash(
     password,
-    Number(env.BCRYPT_SALT_ROUND),
+    Number(config.BCRYPT_SALT_ROUND),
   );
 
   console.log(hashedPassword);
@@ -61,6 +61,16 @@ const registerUserIntoDB = async (payload: RegisterUserPayload) => {
   return result;
 };
 
+const getMeFromDB = async (id: string) => {
+  const me = await prisma.user.findUnique({
+    where: { id },
+    omit: { password: true },
+    include: { profile: true },
+  });
+  return me;
+};
+
 export const UserService = {
   registerUserIntoDB,
+  getMeFromDB,
 };
