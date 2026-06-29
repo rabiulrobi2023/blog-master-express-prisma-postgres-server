@@ -13,3 +13,14 @@ enum NodeEnv {
   DEVELOPMENT
   PRODUCTION
 }
+
+enum PostStatus {
+  DARAT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CommentStatus {
+  APPROVED
+  REJECTED
+}

@@ -1,5 +1,6 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../utils/AppError";
+import jwt from "jsonwebtoken";
 
 import { NodeEnv } from "../../../generated/prisma/enums";
 import config from "../config";
@@ -32,6 +33,24 @@ const globalErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
   if (error instanceof AppError) {
     ((response.statusCode = error.statusCode),
       (response.message = error.message),
+      (response.source = [
+        {
+          path: "",
+          message: error.message,
+        },
+      ]));
+  } else if (error instanceof jwt.JsonWebTokenError) {
+    ((response.statusCode = 401),
+      (response.message = "Invalid token"),
+      (response.source = [
+        {
+          path: "",
+          message: error.message,
+        },
+      ]));
+  } else if (error instanceof jwt.TokenExpiredError) {
+    ((response.statusCode = 401),
+      (response.message = "Token has expired"),
       (response.source = [
         {
           path: "",

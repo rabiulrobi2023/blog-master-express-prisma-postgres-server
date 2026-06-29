@@ -2,6 +2,10 @@ import bcrypt from "bcryptjs";
 import { RegisterUserPayload } from "./user.interface";
 import { prisma } from "../../lib/prisma";
 import config from "../../config";
+import AppError from "../../utils/AppError";
+import { StatusCodes } from "http-status-codes";
+import { Prisma, User } from "../../../../generated/prisma/client";
+import { ProfileUpdateInput } from "../../../../generated/prisma/models";
 
 const registerUserIntoDB = async (payload: RegisterUserPayload) => {
   const { name, email, password, role, bio, profilePhoto } = payload;
@@ -12,8 +16,6 @@ const registerUserIntoDB = async (payload: RegisterUserPayload) => {
     Number(config.BCRYPT_SALT_ROUND),
   );
 
-  console.log(hashedPassword);
-
   const isUserExist = await prisma.user.findUnique({
     where: {
       email: email,
@@ -21,7 +23,7 @@ const registerUserIntoDB = async (payload: RegisterUserPayload) => {
   });
 
   if (isUserExist) {
-    throw new Error("User already exist");
+    throw new AppError(StatusCodes.CONFLICT, "User already exists");
   }
   const user = await prisma.user.create({
     data: {
@@ -70,7 +72,43 @@ const getMeFromDB = async (id: string) => {
   return me;
 };
 
+const updateProfileIntoDB = async (
+  id: string,
+  userUpdateData?: Prisma.UserUpdateInput,
+  profileUpdateData?: ProfileUpdateInput,
+) => {
+  return prisma.$transaction(async (tnx) => {
+    if (userUpdateData) {
+      await tnx.user.update({
+        where: {
+          id: id,
+        },
+        data: userUpdateData,
+      });
+    }
+    if (profileUpdateData) {
+      await tnx.profile.update({
+        where: { userId: id },
+        data: profileUpdateData,
+      });
+    }
+
+    return await tnx.user.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        profile: true,
+      },
+      omit: {
+        password: true,
+      },
+    });
+  });
+};
+
 export const UserService = {
   registerUserIntoDB,
   getMeFromDB,
+  updateProfileIntoDB,
 };
