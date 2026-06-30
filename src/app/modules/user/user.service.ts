@@ -2,10 +2,10 @@ import bcrypt from "bcryptjs";
 import { RegisterUserPayload } from "./user.interface";
 import { prisma } from "../../lib/prisma";
 import config from "../../config";
-import AppError from "../../utils/AppError";
 import { StatusCodes } from "http-status-codes";
-import { Prisma, User } from "../../../../generated/prisma/client";
+import { Prisma } from "../../../../generated/prisma/client";
 import { ProfileUpdateInput } from "../../../../generated/prisma/models";
+import AppError from "../../utils/AppError";
 
 const registerUserIntoDB = async (payload: RegisterUserPayload) => {
   const { name, email, password, role, bio, profilePhoto } = payload;

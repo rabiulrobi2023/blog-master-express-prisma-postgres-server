@@ -18,4 +18,4 @@ router.put(
   UserContrller.updateProfile,
 );
 
-export const UserRouter = router;
+export const userRouter = router;

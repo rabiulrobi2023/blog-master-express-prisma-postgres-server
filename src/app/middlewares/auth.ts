@@ -1,4 +1,4 @@
-import { jwtUtils } from "./../utils/jwt";
+import { JwtUtils } from "./../utils/jwt";
 import config from "../config";
 import catchAsync from "../utils/catchAsync";
 import AppError from "../utils/AppError";
@@ -17,7 +17,7 @@ const auth = (...roles: string[]) => {
       throw new AppError(StatusCodes.UNAUTHORIZED, "Unauthorized access");
     }
 
-    const decoded = jwtUtils.verifyJwtToken(
+    const decoded = JwtUtils.verifyJwtToken(
       accessToken,
       config.JWT_ACCESS_TOKEN_SECRET,
     );

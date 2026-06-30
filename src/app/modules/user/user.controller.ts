@@ -3,8 +3,6 @@ import { UserService } from "./user.service";
 import { StatusCodes } from "http-status-codes";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
-import { jwtUtils } from "../../utils/jwt";
-import config from "../../config";
 
 const registerUser = catchAsync(async (req: Request, res: Response) => {
   const result = await UserService.registerUserIntoDB(req.body);

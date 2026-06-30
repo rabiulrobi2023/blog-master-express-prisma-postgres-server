@@ -1,9 +1,8 @@
 import jwt, { SignOptions } from "jsonwebtoken";
 
-import { IJwtTokenPayload } from "../interface";
 import config from "../config";
-import AppError from "./AppError";
-import { StatusCodes } from "http-status-codes";
+
+import { IJwtTokenPayload } from "../interface/interface";
 
 const jwtAccessTokenGenerator = (payload: IJwtTokenPayload) => {
   const { id, name, email, role } = payload;
@@ -25,12 +24,10 @@ const jwtRefreshTokenGenerator = (payload: IJwtTokenPayload) => {
   return token;
 };
 
-const verifyJwtToken = (
-  token: string,
-  secret: string,
-): IJwtTokenPayload => jwt.verify(token,secret) as IJwtTokenPayload
+const verifyJwtToken = (token: string, secret: string): IJwtTokenPayload =>
+  jwt.verify(token, secret) as IJwtTokenPayload;
 
-export const jwtUtils = {
+export const JwtUtils = {
   jwtAccessTokenGenerator,
   jwtRefreshTokenGenerator,
   verifyJwtToken,

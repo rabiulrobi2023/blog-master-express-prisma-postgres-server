@@ -1,16 +1,21 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "../../lib/prisma";
 import { ILoginUser } from "./auth.interface";
-import { jwtUtils } from "../../utils/jwt";
 
 import AppError from "../../utils/AppError";
 import { StatusCodes } from "http-status-codes";
 import { IJwtTokenPayload } from "../../interface/interface";
 import config from "../../config";
+import { JwtUtils } from "../../utils/jwt";
 
 const loginUserIntoDB = async (payload: ILoginUser) => {
   const { email, password } = payload;
+
   const user = await prisma.user.findFirstOrThrow({ where: { email } });
+
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not registered");
+  }
   const isPasswordMatched = await bcrypt.compare(password, user.password);
 
   if (!isPasswordMatched) {
@@ -28,8 +33,8 @@ const loginUserIntoDB = async (payload: ILoginUser) => {
     role: user.role,
   };
 
-  const accessToken = jwtUtils.jwtAccessTokenGenerator(jwtTokenPayload);
-  const refreshToken = jwtUtils.jwtRefreshTokenGenerator(jwtTokenPayload);
+  const accessToken = JwtUtils.jwtAccessTokenGenerator(jwtTokenPayload);
+  const refreshToken = JwtUtils.jwtRefreshTokenGenerator(jwtTokenPayload);
 
   return {
     accessToken,
@@ -42,7 +47,7 @@ const refreshToken = async (existingRefreshToken: string) => {
     throw new AppError(StatusCodes.UNAUTHORIZED, "Unauthorized access");
   }
 
-  const decoded = jwtUtils.verifyJwtToken(
+  const decoded = JwtUtils.verifyJwtToken(
     existingRefreshToken,
     config.JWT_REFRESH_TOKEN_SECRET,
   );
@@ -64,8 +69,8 @@ const refreshToken = async (existingRefreshToken: string) => {
     role: user.role,
   };
 
-  const accessToken = jwtUtils.jwtAccessTokenGenerator(jwtTokenPayload);
-  const refreshToken = jwtUtils.jwtRefreshTokenGenerator(jwtTokenPayload);
+  const accessToken = JwtUtils.jwtAccessTokenGenerator(jwtTokenPayload);
+  const refreshToken = JwtUtils.jwtRefreshTokenGenerator(jwtTokenPayload);
 
   return {
     accessToken,

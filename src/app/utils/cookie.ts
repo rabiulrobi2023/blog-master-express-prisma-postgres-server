@@ -26,7 +26,7 @@ const setRefreshTokenIntoCookie = (res: Response, token: string) => {
   });
 };
 
-export const cookieUtils = {
+export const CookieUtils = {
   setAccessTokenIntoCookie,
   setRefreshTokenIntoCookie,
 };
