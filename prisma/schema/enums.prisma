@@ -15,7 +15,7 @@ enum NodeEnv {
 }
 
 enum PostStatus {
-  DARAT
+  DRAFT
   PUBLISHED
   ARCHIVED
 }

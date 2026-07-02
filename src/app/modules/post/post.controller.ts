@@ -70,13 +70,26 @@ const deletePost = catchAsync(async (req, res, next) => {
   const user: IJwtTokenPayload = req.user;
   const authorId = user.id;
   const isAdmin = user.role === "ADMIN";
-  const postId = req.params.postId
+  const postId = req.params.postId;
 
-  const result = await PostService.deletePostFromDB(postId as string, authorId, isAdmin);
-  
+  const result = await PostService.deletePostFromDB(
+    postId as string,
+    authorId,
+    isAdmin,
+  );
+
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     message: "Post deleted successfully",
+    data: result,
+  });
+});
+
+const getPostStats = catchAsync(async (req, res, next) => {
+  const result = await PostService.getPostStatsFromDB();
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    message: "Post statisticts retived successfully",
     data: result,
   });
 });
@@ -88,4 +101,5 @@ export const PostContrller = {
   getMyPost,
   updatePost,
   deletePost,
+  getPostStats
 };

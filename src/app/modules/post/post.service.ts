@@ -32,9 +32,6 @@ const getAllPostsFromDB = async () => {
   return result;
 };
 const getSinglePostFromDB = async (postId: string) => {
-  if (!postId.trim()) {
-    throw new AppError(StatusCodes.NOT_FOUND, "Post id not found");
-  }
   return await prisma.post.update({
     where: { id: postId },
     data: {
@@ -47,8 +44,41 @@ const getSinglePostFromDB = async (postId: string) => {
           id: true,
         },
       },
+      _count: {
+        select: { comments: true },
+      },
     },
   });
+
+  //Alternative
+
+  // return prisma.$transaction(async (tnx) => {
+  //   await tnx.post.update({
+  //     where: {
+  //       id: postId,
+  //     },
+  //     data: {
+  //       views: {
+  //         increment: 1,
+  //       },
+  //     },
+  //   });
+
+  //   return await tnx.post.findUnique({
+  //     where: { id: postId },
+  //     include: {
+  //       author: {
+  //         omit: {
+  //           password: true,
+  //           id: true,
+  //         },
+  //       },
+  //       _count: {
+  //         select: { comments: true },
+  //       },
+  //     },
+  //   });
+  // });
 };
 
 const getMyPostsFromDB = async (authorId: string) => {
@@ -96,7 +126,7 @@ const updatePostIntoDB = async (
 
   const result = await prisma.post.update({
     where: {
-      id: postId,
+      id: post.id,
     },
     data: payload,
     include: {
@@ -130,6 +160,54 @@ const deletePostFromDB = async (
   return null;
 };
 
+const getPostStatsFromDB = async () => {
+  return await prisma.$transaction(async (tx) => {
+    const totalPosts = await tx.post.count();
+    const totalApprovedPosts = await tx.post.count({
+      where: {
+        status: "PUBLISHED",
+      },
+    });
+    const totalArchivedPosts = await tx.post.count({
+      where: { status: "ARCHIVED" },
+    });
+
+    const totalDraftPosts = await tx.post.count({
+      where: {
+        status: "DRAFT",
+      },
+    });
+
+    const totalComments = await tx.comment.count();
+    const totalApprovedComments = await tx.comment.count({
+      where: { status: "APPROVED" },
+    });
+
+    const totalRejectedComments = await tx.comment.count({
+      where: { status: "REJECTED" },
+    });
+
+    const totalViewsAggregrate = await tx.post.aggregate({
+      _sum:{
+        views: true
+      }
+    })
+
+    const totalViews = totalViewsAggregrate._sum.views
+
+    return {
+      totalPosts,
+      totalApprovedPosts,
+      totalArchivedPosts,
+      totalDraftPosts,
+      totalComments,
+      totalApprovedComments,
+      totalRejectedComments,
+      totalViews
+    };
+  });
+};
+
 export const PostService = {
   createPostIntoDB,
   getAllPostsFromDB,
@@ -137,4 +215,5 @@ export const PostService = {
   getMyPostsFromDB,
   updatePostIntoDB,
   deletePostFromDB,
+  getPostStatsFromDB,
 };
