@@ -5,8 +5,9 @@ import {
   ICreateCommentPayload,
   IUpdateCommentPayload,
 } from "./comment.interface";
-import { IJwtTokenPayload } from "../../interface/interface";
+
 import { CommentStatus } from "../../../../generated/prisma/enums";
+import { IJwtTokenPayloads } from "../../interface/interface";
 
 const createCommentIntDB = async (
   authorId: string,
@@ -98,7 +99,7 @@ const updateCommentIntoDB = async (
   return result;
 };
 
-const deleteComment = async (user: IJwtTokenPayload, commentId: string) => {
+const deleteComment = async (user: IJwtTokenPayloads, commentId: string) => {
   const comment = await prisma.comment.findUnique({ where: { id: commentId } });
   if (!comment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Comment not found");

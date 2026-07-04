@@ -2,6 +2,13 @@ import { StatusCodes } from "http-status-codes";
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import { ICreatePostPayload, IPostQuery, IUpdatePost } from "./post.interface";
+import { PostWhereInput } from "../../../../generated/prisma/models";
+import { Prisma } from "../../../../generated/prisma/client";
+import { postFilterableFields, postSerachableFields } from "./post.constant";
+import { IPaginationOptions } from "../../interface/interface";
+import buildSearchCondition from "../../utils/buildSearchCondition";
+import buildFilterCondition from "../../utils/buildFilterCondition";
+import calculatePagination from "../../utils/calculatePagination";
 
 const createPostIntoDB = async (
   authorId: string,
@@ -17,11 +24,32 @@ const createPostIntoDB = async (
   return result;
 };
 const getAllPostsFromDB = async (query: IPostQuery) => {
-  const limit = query.limit ? Number(query.limit) : 10;
-  const page = query.page ? Number(query.page) : 1;
-  const skip = (page - 1) * limit;
-  const sortBy = query.sortBy ? query.sortBy : "createdAt";
-  const sortOrder = query.sortOrder ? query.sortOrder : "desc";
+  const { searchTerm, limit, page, sortBy, sortOrder, ...queryFilter } = query;
+  const pagination = calculatePagination({
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+  } as IPaginationOptions);
+
+  const andConditions: PostWhereInput[] = [];
+
+  const searchCondition = buildSearchCondition(
+    searchTerm?.trim() as string,
+    postSerachableFields,
+  );
+
+  if (searchTerm?.trim()) {
+    andConditions.push(searchCondition);
+  }
+
+  const filterCondition = buildFilterCondition(
+    queryFilter,
+    postFilterableFields,
+  );
+  if (queryFilter) {
+    andConditions.push(filterCondition);
+  }
 
   const result = await prisma.post.findMany({
     where: {
@@ -81,24 +109,34 @@ const getAllPostsFromDB = async (query: IPostQuery) => {
       //
       //
       //Dynamic filtering and searching
-      AND: [
-        query.title ? { title: query.title } : {},
-        query.status ? { status: query.status } : {},
-        query.searchTerm
-          ? {
-              OR: [
-                {
-                  content: { contains: query.searchTerm, mode: "insensitive" },
-                },
-                { title: { contains: query.searchTerm, mode: "insensitive" } },
-              ],
-            }
-          : {},
-      ],
+      // AND: [
+      //   query.title ? { title: query.title } : {},
+      //   query.status ? { status: query.status } : {},
+      //   query.searchTerm
+      //     ? {
+      //         OR: [
+      //           {
+      //             content: { contains: query.searchTerm, mode: "insensitive" },
+      //           },
+      //           { title: { contains: query.searchTerm, mode: "insensitive" } },
+      //         ],
+      //       }
+      //     : {},
+      // ],
+
+      AND: { AND: andConditions },
     },
-    take: limit,
-    skip: skip,
-    orderBy: { [sortBy]: sortOrder },
+    // Dynamic pagination and sorting
+    // take: limit,
+    // skip: skip,
+    // orderBy: { [sortBy]: sortOrder },
+    //
+    //
+    //Dynamic and optimized pagination
+    skip: pagination.skip,
+    take: pagination.limit as number,
+    orderBy: { [pagination.sortBy]: pagination.sortOrder },
+
     // include: {
     //   author: {
     //     omit: {

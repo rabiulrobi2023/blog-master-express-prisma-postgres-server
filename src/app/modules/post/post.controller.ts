@@ -3,7 +3,7 @@ import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { PostService } from "./post.service";
 import { Role } from "../../../../generated/prisma/enums";
-import { IJwtTokenPayload } from "../../interface/interface";
+import { IJwtTokenPayloads } from "../../interface/interface";
 
 const createPost = catchAsync(async (req, res, next) => {
   const authorId = req.user.id;
@@ -17,7 +17,7 @@ const createPost = catchAsync(async (req, res, next) => {
 });
 
 const getAllPost = catchAsync(async (req, res, next) => {
-  const query = req.query
+  const query = req.query;
   const result = await PostService.getAllPostsFromDB(query);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
@@ -49,7 +49,7 @@ const getMyPost = catchAsync(async (req, res, next) => {
 });
 
 const updatePost = catchAsync(async (req, res, next) => {
-  const user: IJwtTokenPayload = req.user;
+  const user = req.user;
   const postId = req.params.postId;
   const authorId = user.id;
   const payload = req.body;
@@ -68,7 +68,7 @@ const updatePost = catchAsync(async (req, res, next) => {
 });
 
 const deletePost = catchAsync(async (req, res, next) => {
-  const user: IJwtTokenPayload = req.user;
+  const user: IJwtTokenPayloads = req.user;
   const authorId = user.id;
   const isAdmin = user.role === "ADMIN";
   const postId = req.params.postId;
@@ -102,5 +102,5 @@ export const PostContrller = {
   getMyPost,
   updatePost,
   deletePost,
-  getPostStats
+  getPostStats,
 };
