@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
-import { ICreatePostPayload, IUpdatePost } from "./post.interface";
+import { ICreatePostPayload, IPostQuery, IUpdatePost } from "./post.interface";
 
 const createPostIntoDB = async (
   authorId: string,
@@ -16,18 +16,99 @@ const createPostIntoDB = async (
   });
   return result;
 };
-const getAllPostsFromDB = async () => {
+const getAllPostsFromDB = async (query: IPostQuery) => {
+  const limit = query.limit ? Number(query.limit) : 10;
+  const page = query.page ? Number(query.page) : 1;
+  const skip = (page - 1) * limit;
+  const sortBy = query.sortBy ? query.sortBy : "createdAt";
+  const sortOrder = query.sortOrder ? query.sortOrder : "desc";
+
   const result = await prisma.post.findMany({
-    include: {
-      author: {
-        omit: {
-          password: true,
-          email: true,
-          activeStatus: true,
-        },
-      },
-      comments: true,
+    where: {
+      //Filtering in single field
+      // status:"DRAFT"
+      //
+      //
+      //Filtering in multiple field
+      // AND:[
+      //   {
+      //     status: "PUBLISHED"
+      //   },
+      //   {
+      //     title: "Learning Express"
+      //   }
+      // ]
+      //
+      //
+      //Filtering in array type field
+      // AND: [
+      //   {
+      //     tags: {
+      //       has: "database",
+      //     },
+      //   },
+      // ],
+      //
+      //
+      //Searching in single field and case sensetive
+      // title: {contains:"Backend"}
+      //
+      //
+      //Searching in single field and case insensetive
+      // title: {contains:"backend", mode:"insensitive"}
+      //
+      //
+      // Searching in multiple field
+      // OR: [
+      //   {
+      //     title: { contains: "backend", mode: "insensitive" },
+      //   },
+      //   { content: { contains: "database", mode: "insensitive" } },
+      // ],
+      //
+      //
+      //Combination of filtering and searching
+      // AND: [
+      //   { status: "PUBLISHED" },
+      //   {
+      //     OR: [
+      //       { title: { contains: "express", mode: "insensitive" } },
+      //       { content: { contains: "database", mode: "insensitive" } },
+      //     ],
+      //   },
+      // ],
+      //
+      //
+      //
+      //Dynamic filtering and searching
+      AND: [
+        query.title ? { title: query.title } : {},
+        query.status ? { status: query.status } : {},
+        query.searchTerm
+          ? {
+              OR: [
+                {
+                  content: { contains: query.searchTerm, mode: "insensitive" },
+                },
+                { title: { contains: query.searchTerm, mode: "insensitive" } },
+              ],
+            }
+          : {},
+      ],
     },
+    take: limit,
+    skip: skip,
+    orderBy: { [sortBy]: sortOrder },
+    // include: {
+    //   author: {
+    //     omit: {
+    //       password: true,
+    //       email: true,
+    //       activeStatus: true,
+    //     },
+    //   },
+    //   comments: true,
+    // },
   });
   return result;
 };
@@ -111,7 +192,7 @@ const updatePostIntoDB = async (
   isAdmin: boolean,
   payload: IUpdatePost,
 ) => {
-  const post = await prisma.post.findUniqueOrThrow({ where: { id: postId } });
+  const post = await prisma.post.findUnique({ where: { id: postId } });
 
   if (!post) {
     throw new AppError(StatusCodes.NOT_FOUND, "Post not found");
@@ -162,38 +243,90 @@ const deletePostFromDB = async (
 
 const getPostStatsFromDB = async () => {
   return await prisma.$transaction(async (tx) => {
-    const totalPosts = await tx.post.count();
-    const totalApprovedPosts = await tx.post.count({
-      where: {
-        status: "PUBLISHED",
-      },
-    });
-    const totalArchivedPosts = await tx.post.count({
-      where: { status: "ARCHIVED" },
-    });
+    // const totalPosts = await tx.post.count();
+    // const totalApprovedPosts = await tx.post.count({
+    //   where: {
+    //     status: "PUBLISHED",
+    //   },
+    // });
+    // const totalArchivedPosts = await tx.post.count({
+    //   where: { status: "ARCHIVED" },
+    // });
 
-    const totalDraftPosts = await tx.post.count({
-      where: {
-        status: "DRAFT",
-      },
-    });
+    // const totalDraftPosts = await tx.post.count({
+    //   where: {
+    //     status: "DRAFT",
+    //   },
+    // });
 
-    const totalComments = await tx.comment.count();
-    const totalApprovedComments = await tx.comment.count({
-      where: { status: "APPROVED" },
-    });
+    // const totalComments = await tx.comment.count();
 
-    const totalRejectedComments = await tx.comment.count({
-      where: { status: "REJECTED" },
-    });
+    // const totalApprovedComments = await tx.comment.count({
+    //   where: { status: "APPROVED" },
+    // });
 
-    const totalViewsAggregrate = await tx.post.aggregate({
-      _sum:{
-        views: true
-      }
-    })
+    // const totalRejectedComments = await tx.comment.count({
+    //   where: { status: "REJECTED" },
+    // });
 
-    const totalViews = totalViewsAggregrate._sum.views
+    // const totalViewsAggregrate = await tx.post.aggregate({
+    //   _sum: {
+    //     views: true,
+    //   },
+    // });
+
+    // const totalViews = totalViewsAggregrate._sum.views;
+
+    // return {
+    //   totalPosts,
+    //   totalApprovedPosts,
+    //   totalArchivedPosts,
+    //   totalDraftPosts,
+    //   totalComments,
+    //   totalApprovedComments,
+    //   totalRejectedComments,
+    //   totalViews,
+    // };
+
+    //Alternative [The avove method is series sequencial that takes long time. The bellow method is parallel async operation so it take less time]
+
+    const [
+      totalPosts,
+      totalApprovedPosts,
+      totalArchivedPosts,
+      totalDraftPosts,
+      totalComments,
+      totalApprovedComments,
+      totalRejectedComments,
+      totalViewsAggregrate,
+    ] = await Promise.all([
+      await tx.post.count(),
+      await tx.post.count({
+        where: {
+          status: "PUBLISHED",
+        },
+      }),
+      await tx.post.count({
+        where: { status: "ARCHIVED" },
+      }),
+      await tx.post.count({
+        where: {
+          status: "DRAFT",
+        },
+      }),
+      await tx.comment.count(),
+      await tx.comment.count({
+        where: { status: "APPROVED" },
+      }),
+      await tx.comment.count({
+        where: { status: "REJECTED" },
+      }),
+      await tx.post.aggregate({
+        _sum: {
+          views: true,
+        },
+      }),
+    ]);
 
     return {
       totalPosts,
@@ -203,7 +336,7 @@ const getPostStatsFromDB = async () => {
       totalComments,
       totalApprovedComments,
       totalRejectedComments,
-      totalViews
+      totalViewsAggregrate: totalViewsAggregrate._sum.views,
     };
   });
 };
