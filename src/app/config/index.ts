@@ -13,6 +13,10 @@ const requiredEnvVars = [
   "JWT_ACCESS_TOKEN_EXPIRE_IN",
   "JWT_REFRESH_TOKEN_SECRET",
   "JWT_REFRESH_TOKEN_EXPIRE_IN",
+  "STRIPE_PRODUCT_KEY",
+  "STRIPE_SECRET_KEY",
+  "STRIPE_PRICE_ID",
+  "STRIPE_WEBHOOK_SECRET",
 ] as const;
 
 const loadEnvConfig = () => {

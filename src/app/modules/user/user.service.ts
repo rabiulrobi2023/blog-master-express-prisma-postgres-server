@@ -22,9 +22,9 @@ const registerUserIntoDB = async (payload: RegisterUserPayload) => {
     },
   });
 
-  if (isUserExist) {
-    throw new AppError(StatusCodes.CONFLICT, "User already exists");
-  }
+  // if (isUserExist) {
+  //   throw new AppError(StatusCodes.CONFLICT, "User already exists");
+  // }
   const user = await prisma.user.create({
     data: {
       name,

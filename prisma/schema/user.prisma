@@ -5,10 +5,14 @@ model User {
   password     String
   activeStatus ActiveStatus @default(ACTIVE)
   role         Role         @default(USER)
-  profile      Profile?
 
-  posts    Post[]
+  profile Profile?
+
+  posts Post[]
+
   comments Comment[]
+
+  subscription Subscription?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

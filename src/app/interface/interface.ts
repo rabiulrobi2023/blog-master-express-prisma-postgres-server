@@ -15,6 +15,10 @@ export interface IPaginationOptions {
   sortOrder: string;
 }
 
-export interface IPagination extends IPaginationOptions {
+export interface IPagination {
+  page: number;
+  limit: number;
   skip: number;
+  sortBy: string;
+  sortOrder: string;
 }

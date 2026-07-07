@@ -14,6 +14,11 @@ app.use(
     credentials: true,
   }),
 );
+
+app.use(
+  "/api/v1/subscription/webhook",
+  express.raw({ type: "application/json" }),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -23,7 +28,8 @@ app.get("/", async (req: Request, res: Response) => {
 });
 
 app.use("/api/v1", router);
-app.use(globalErrorHandler)
-app.use(notFoundRoute)
+
+app.use(globalErrorHandler);
+app.use(notFoundRoute);
 
 export default app;

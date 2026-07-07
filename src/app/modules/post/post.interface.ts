@@ -6,6 +6,7 @@ export interface ICreatePostPayload {
   content: string;
   thumbnail?: string;
   tags?: string[];
+  isPremium: boolean
 }
 
 export interface IUpdatePost {

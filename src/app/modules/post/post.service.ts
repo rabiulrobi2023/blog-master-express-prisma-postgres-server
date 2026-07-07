@@ -14,6 +14,17 @@ const createPostIntoDB = async (
   authorId: string,
   payload: ICreatePostPayload,
 ) => {
+  const user = await prisma.user.findUnique({
+    where: { id: authorId },
+    include: { subscription: true },
+  });
+
+  if (payload.isPremium && user?.subscription?.status !== "ACTIVE") {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "You are not a premium user. So you can not create premium content",
+    );
+  }
   const result = await prisma.post.create({
     data: {
       ...payload,
@@ -23,6 +34,7 @@ const createPostIntoDB = async (
   });
   return result;
 };
+
 const getAllPostsFromDB = async (query: IPostQuery) => {
   const { searchTerm, limit, page, sortBy, sortOrder, ...queryFilter } = query;
   const pagination = calculatePagination({
@@ -34,23 +46,24 @@ const getAllPostsFromDB = async (query: IPostQuery) => {
 
   const andConditions: PostWhereInput[] = [];
 
-  const searchCondition = buildSearchCondition(
-    searchTerm?.trim() as string,
-    postSerachableFields,
-  );
-
   if (searchTerm?.trim()) {
+    const searchCondition = buildSearchCondition(
+      searchTerm?.trim() as string,
+      postSerachableFields,
+    );
     andConditions.push(searchCondition);
   }
 
-  const filterCondition = buildFilterCondition(
-    queryFilter,
-    postFilterableFields,
-  );
   if (queryFilter) {
+    const filterCondition = buildFilterCondition(
+      queryFilter,
+      postFilterableFields,
+    );
+
     andConditions.push(filterCondition);
   }
 
+  andConditions.push({ isPremium: false });
   const result = await prisma.post.findMany({
     where: {
       //Filtering in single field
@@ -124,7 +137,7 @@ const getAllPostsFromDB = async (query: IPostQuery) => {
       //     : {},
       // ],
 
-      AND: { AND: andConditions },
+      AND: andConditions,
     },
     // Dynamic pagination and sorting
     // take: limit,
@@ -148,11 +161,25 @@ const getAllPostsFromDB = async (query: IPostQuery) => {
     //   comments: true,
     // },
   });
-  return result;
+
+  const totalPostCount = await prisma.post.count({
+    where: {
+      AND: andConditions,
+    },
+  });
+  return {
+    data: result,
+    meta: {
+      page: pagination.page,
+      limit: pagination.limit,
+      total: totalPostCount,
+      totalPage: Math.ceil(totalPostCount / pagination.limit),
+    },
+  };
 };
 const getSinglePostFromDB = async (postId: string) => {
   return await prisma.post.update({
-    where: { id: postId },
+    where: { id: postId, isPremium: false },
     data: {
       views: { increment: 1 },
     },
